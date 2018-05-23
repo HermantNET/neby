@@ -86,7 +86,7 @@ func getAddress(id int64) ([]byte, error) {
 	}
 
 	var res result
-	err = json.Unmarshal(body, &res)
+	err = json.Unmarshal(r.Result, &res)
 	if err != nil {
 		fmt.Println(string(body))
 		return nil, errorDecodeJSON
