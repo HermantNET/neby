@@ -19,6 +19,7 @@ const chainID = 1
 
 var errorNotInStorage = errors.New("account not in storage")
 var errorUnexpectedLength = errors.New("unexpected length")
+var errorDecodeJSON = errors.New("error decoding JSON response")
 
 var client = &http.Client{
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -70,35 +71,29 @@ func getAddress(id int64) ([]byte, error) {
 	var parsed map[string]interface{}
 	err = json.Unmarshal(body, &parsed)
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		fmt.Println(string(body))
+		return nil, errorDecodeJSON
 	}
 
 	switch parsed["result"].(type) {
 	case map[string]interface{}:
 		if e := parsed["result"].(map[string]interface{})["execute_err"].(string); e != "" {
-			fmt.Println(err)
 			return nil, errors.New(e)
 		}
 
 		r := parsed["result"].(map[string]interface{})["result"]
 		if r == nil || r.(string) == "" || r.(string) == `{"account":null}` {
-			fmt.Println(err)
 			return nil, errorNotInStorage
 		}
 
 		result := make(map[string]interface{})
 		err := json.Unmarshal([]byte(r.(string)), &result)
 		if err != nil {
-			fmt.Println(err)
-			return nil, err
+			return nil, errorDecodeJSON
 		}
 
 		key, err := decrypt(result["account"].(string))
 		if err != nil {
-			fmt.Println(result)
-			fmt.Println(result["error"])
-			fmt.Println(result["execute_err"])
 			return nil, err
 		}
 
