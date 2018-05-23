@@ -149,6 +149,7 @@ func parseChatCmds(msg anaconda.DirectMessage) error {
 			var nonce uint64
 			a, err := getAcc(msg.SenderId, msg.SenderId, &nonce)
 			if err != nil {
+				fmt.Println(err)
 				api.PostDMToUserId("Sorry, something went wrong.", msg.SenderId)
 			} else {
 				api.PostDMToUserId(fmt.Sprintf("Your NAS address is: %s", a.addr), msg.SenderId)

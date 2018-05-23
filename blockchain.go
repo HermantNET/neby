@@ -67,34 +67,45 @@ func getAddress(id int64) ([]byte, error) {
 		return nil, err
 	}
 
+	type response struct {
+		Result string `json:"result"`
+	}
+
 	body := readBody(resp)
-	var parsed map[string]interface{}
-	err = json.Unmarshal(body, &parsed)
+	var r response
+	err = json.Unmarshal(body, &r)
 	if err != nil {
 		fmt.Println(string(body))
 		return nil, errorDecodeJSON
 	}
 
-	switch parsed["result"].(type) {
-	case map[string]interface{}:
-		if e := parsed["result"].(map[string]interface{})["execute_err"].(string); e != "" {
-			return nil, errors.New(e)
-		}
-
-		r := parsed["result"].(map[string]interface{})["result"]
-		if r == nil || r.(string) == "" || r.(string) == `null` {
-			return nil, errorNotInStorage
-		}
-
-		key, err := decrypt(r.(string))
-		if err != nil {
-			return nil, err
-		}
-
-		return key, nil
+	type result struct {
+		Result       string `json:"result"`
+		ExecuteErr   string `json:"execute_err"`
+		EstimatedGas string `json:"estimated_gas"`
 	}
 
-	return nil, errors.New("no matching case")
+	var res result
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		fmt.Println(string(body))
+		return nil, errorDecodeJSON
+	}
+
+	if res.Result == "" {
+		return nil, errorNotInStorage
+	}
+
+	if res.ExecuteErr != "" {
+		return nil, errors.New(res.ExecuteErr)
+	}
+
+	key, err := decrypt(res.Result)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }
 
 func encrypt(acc account) (string, error) {
