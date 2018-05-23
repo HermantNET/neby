@@ -144,15 +144,15 @@ func parseChatCmds(msg anaconda.DirectMessage) error {
 	case "help":
 		api.PostDMToUserId("Available commands: help, address, transfer", msg.SenderId)
 	case "address":
-		go func() {
+		go func(msg anaconda.DirectMessage) {
 			var nonce uint64
 			a, err := getAcc(msg.SenderId, msg.SenderId, &nonce)
 			if err != nil {
-				api.PostDMToUserId(fmt.Sprintf("Sorry, something went wrong. Error: %v", err), msg.SenderId)
+				api.PostDMToUserId("Sorry, something went wrong.", msg.SenderId)
 			} else {
 				api.PostDMToUserId(fmt.Sprintf("Your NAS address is: %s", a.addr), msg.SenderId)
 			}
-		}()
+		}(msg)
 	case "transfer":
 		api.PostDMToUserId(`To transfer NAS to another address, type "transfer your_address_here amount"`, msg.SenderId)
 	}
@@ -212,9 +212,6 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 		}
 
 		err = setAddress(acc, senderID)
-		if err != nil {
-			return
-		}
 	} else {
 		acc, err = newAccount(address)
 		if err != nil {

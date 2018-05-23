@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 
 	"github.com/ChimeraCoder/anaconda"
@@ -45,6 +46,8 @@ func TestParseStatus(t *testing.T) {
 }
 
 func TestEncyption(t *testing.T) {
+	os.Setenv("secret", "123456789abcdefg")
+
 	enc, err := encrypt(acc)
 	if err != nil {
 		t.Error(err)
