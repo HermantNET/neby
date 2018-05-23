@@ -82,13 +82,13 @@ func getAddress(id int64) ([]byte, error) {
 	type result struct {
 		Result       string `json:"result"`
 		ExecuteErr   string `json:"execute_err"`
-		EstimatedGas string `json:"estimated_gas"`
+		EstimatedGas string `json:"estimate_gas"`
 	}
 
 	var res result
 	err = json.Unmarshal([]byte(r.Result), &res)
 	if err != nil {
-		fmt.Println(string(body))
+		fmt.Println(r.Result)
 		return nil, errorDecodeJSON
 	}
 
