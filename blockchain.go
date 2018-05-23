@@ -121,7 +121,10 @@ func encrypt(acc account) (string, error) {
 }
 
 func decrypt(d string) ([]byte, error) {
-	fmt.Println(len(d))
+	if len(d) != 32 {
+		return nil, errors.New("unexpected length")
+	}
+
 	data, err := hex.DecodeString(d)
 	if err != nil {
 		return nil, err
