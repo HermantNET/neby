@@ -1,4 +1,4 @@
-const bot = "n1S4FbnE8DLWmSpCMTTgw3HvCFeJ6iuhvy6"
+const bot = "n1HY4ob2kBRacVHoJKGqmwsvhE6BN5pvEy2"
 
 class Yo {
   constructor() {

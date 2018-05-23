@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"./nebulas/util"
-	_ "github.com/joho/godotenv/autoload"
+	// _ "github.com/joho/godotenv/autoload"
 )
 
-var contractAddress = "n1kWMooMHDAnLQXe6pLdZ6xDRBXCVJHuPcJ"
+var contractAddress = "n1vmsoig4cbzub3hEZ8FhrrejHZkAKacNo9"
 var botPriv, _ = hex.DecodeString(os.Getenv("bot"))
 var bot, _ = newAccount(botPriv)
 
