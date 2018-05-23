@@ -157,7 +157,7 @@ func setAddress(acc account, id int64) error {
 	}
 
 	data := fmt.Sprintf(
-		`{"function":"setAccount", "args":"[\"%v\",\"%s\"]"}`,
+		`{"function":"setAccount", "args":"['%v', '%s']"}`,
 		id,
 		encrypted,
 	)
