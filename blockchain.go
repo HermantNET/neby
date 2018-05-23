@@ -63,7 +63,6 @@ func getAddress(id int64) ([]byte, error) {
 
 	resp, err := client.Post(url, "application/json", bytes.NewBuffer([]byte(data)))
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -71,33 +70,31 @@ func getAddress(id int64) ([]byte, error) {
 	var parsed map[string]interface{}
 	err = json.Unmarshal(body, &parsed)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
 	switch parsed["result"].(type) {
 	case map[string]interface{}:
 		if e := parsed["result"].(map[string]interface{})["execute_err"].(string); e != "" {
-			fmt.Println(err)
 			return nil, errors.New(e)
 		}
 
 		r := parsed["result"].(map[string]interface{})["result"]
 		if r == nil || r.(string) == "" || r.(string) == `{"account":null}` {
-			fmt.Println(err)
 			return nil, errorNotInStorage
 		}
 
-		result := make(map[string]string)
+		result := make(map[string]interface{})
 		err := json.Unmarshal([]byte(r.(string)), &result)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 
-		key, err := decrypt(result["account"])
+		key, err := decrypt(result["account"].(string))
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(result)
+			fmt.Println(result["error"])
+			fmt.Println(result["execute_err"])
 			return nil, err
 		}
 
@@ -129,7 +126,6 @@ func encrypt(acc account) (string, error) {
 
 func decrypt(d string) ([]byte, error) {
 	if len(d) != 64 {
-		fmt.Println(d)
 		return nil, errorUnexpectedLength
 	}
 
