@@ -89,6 +89,7 @@ func getAddress(id int64) ([]byte, error) {
 		result := make(map[string]interface{})
 		err := json.Unmarshal([]byte(r.(string)), &result)
 		if err != nil {
+			fmt.Println(string(body))
 			return nil, errorDecodeJSON
 		}
 
