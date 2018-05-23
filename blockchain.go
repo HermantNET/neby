@@ -121,6 +121,7 @@ func encrypt(acc account) (string, error) {
 }
 
 func decrypt(d string) ([]byte, error) {
+	fmt.Println(len(d))
 	data, err := hex.DecodeString(d)
 	if err != nil {
 		return nil, err
