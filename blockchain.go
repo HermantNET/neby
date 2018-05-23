@@ -121,7 +121,7 @@ func encrypt(acc account) (string, error) {
 }
 
 func decrypt(d string) ([]byte, error) {
-	if len(d) != 32 {
+	if len(d) != 64 {
 		return nil, errors.New("unexpected length")
 	}
 

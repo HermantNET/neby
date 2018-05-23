@@ -35,6 +35,7 @@ var api = anaconda.NewTwitterApiWithCredentials(
 )
 
 var waitingForConfirmation = sync.Map{}
+var waitingForAddress = sync.Map{}
 
 // Wait for @bot mentions to instigate a transaction
 func stream() {
@@ -206,6 +207,13 @@ func confirmUserTxResponse(dm anaconda.DirectMessage) bool {
 func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 	address, err2 := getAddress(id)
 	if err2 != nil {
+		if _, ok := waitingForAddress.Load(id); ok {
+			err = errors.New("generating address, please wait")
+			return
+		}
+
+		waitingForAddress.Store(id, true)
+		defer waitingForAddress.Delete(id)
 		acc, err = newAccount(nil)
 		if err != nil {
 			return
