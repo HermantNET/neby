@@ -82,18 +82,11 @@ func getAddress(id int64) ([]byte, error) {
 		}
 
 		r := parsed["result"].(map[string]interface{})["result"]
-		if r == nil || r.(string) == "" || r.(string) == `{"account":null}` {
+		if r == nil || r.(string) == "" || r.(string) == `null` {
 			return nil, errorNotInStorage
 		}
 
-		result := make(map[string]interface{})
-		err := json.Unmarshal([]byte(r.(string)), &result)
-		if err != nil {
-			fmt.Println(string(body))
-			return nil, errorDecodeJSON
-		}
-
-		key, err := decrypt(result["account"].(string))
+		key, err := decrypt(r.(string))
 		if err != nil {
 			return nil, err
 		}
