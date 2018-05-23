@@ -59,6 +59,18 @@ func TestEncyption(t *testing.T) {
 	}
 }
 
+func TestDecrypt(t *testing.T) {
+	_, err := decrypt("486b2395e856db1981bb611739193fee7e1e19f2402192bb83d3375b40655492")
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = decrypt("")
+	if err == nil {
+		t.Error("Should fail.")
+	}
+}
+
 func TestGetAcc(t *testing.T) {
 	var nonce uint64
 	_, err := getAcc(123456, 123456, &nonce)

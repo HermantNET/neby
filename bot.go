@@ -207,19 +207,26 @@ func confirmUserTxResponse(dm anaconda.DirectMessage) bool {
 func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 	address, err2 := getAddress(id)
 	if err2 != nil {
+		if err2 == errorUnexpectedLength {
+			err = err2
+			return
+		}
+
 		if _, ok := waitingForAddress.Load(id); ok {
 			err = errors.New("generating address, please wait")
 			return
 		}
 
 		waitingForAddress.Store(id, true)
-		defer waitingForAddress.Delete(id)
 		acc, err = newAccount(nil)
 		if err != nil {
 			return
 		}
 
 		err = setAddress(acc, senderID)
+		if err == nil {
+			waitingForAddress.Delete(id)
+		}
 	} else {
 		acc, err = newAccount(address)
 		if err != nil {

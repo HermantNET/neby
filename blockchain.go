@@ -18,6 +18,7 @@ const mainnetURL = "https://mainnet.nebulas.io"
 const chainID = 1
 
 var errorNotInStorage = errors.New("account not in storage")
+var errorUnexpectedLength = errors.New("unexpected length")
 
 var client = &http.Client{
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -122,7 +123,8 @@ func encrypt(acc account) (string, error) {
 
 func decrypt(d string) ([]byte, error) {
 	if len(d) != 64 {
-		return nil, errors.New("unexpected length")
+		fmt.Println(d)
+		return nil, errorUnexpectedLength
 	}
 
 	data, err := hex.DecodeString(d)
