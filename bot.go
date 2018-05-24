@@ -208,7 +208,7 @@ func confirmUserTxResponse(dm anaconda.DirectMessage) bool {
 func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 	address, err2 := getAddress(id)
 	if err2 != nil {
-		if err2 == errorUnexpectedLength || err2 == errorDecodeJSON {
+		if err2 == errorDecodeJSON {
 			err = err2
 			return
 		}
