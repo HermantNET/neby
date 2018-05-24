@@ -323,7 +323,7 @@ func confirmTxTimeout(userID int64) {
 }
 
 func parseStatus(status anaconda.Tweet) (amount float64, err error) {
-	r, _ := regexp.Compile(" (send|gift|give|wire|grant|drop|donate) ")
+	r, _ := regexp.Compile("@NebBot (send|gift|give|wire|grant|drop|donate) ")
 	if r.MatchString(status.Text) {
 		match := r.FindStringIndex(status.Text)
 		end := strings.Index(status.Text, " NAS")

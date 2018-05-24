@@ -11,7 +11,7 @@ import (
 )
 
 var acc, _ = newAccount(nil)
-var tweet = anaconda.Tweet{Text: "@NebBot please send 5 NAS, thanks"}
+var tweet = anaconda.Tweet{Text: "@NebBot send 5 NAS, thanks"}
 var tx, _ = newTx(txParams{
 	acc.addr,
 	acc.addr,
