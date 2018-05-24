@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"regexp"
@@ -80,7 +81,6 @@ func parseChatCmds(msg anaconda.DirectMessage) error {
 			return err
 		}
 
-		fmt.Println(m[9:44])
 		addr, err := core.AddressParse(clean(msg.Text)[9:44])
 		if err != nil {
 			return err
@@ -137,7 +137,7 @@ func parseChatCmds(msg anaconda.DirectMessage) error {
 			return errors.New(parsed["error"])
 		}
 
-		api.PostDMToUserId("Transaction sent.", msg.SenderId)
+		api.PostDMToUserId("Transaction sent. View your pending transactions at https://explorer.nebulas.io/", msg.SenderId)
 		return nil
 	}
 
@@ -189,10 +189,10 @@ func confirmUserTxResponse(dm anaconda.DirectMessage) bool {
 		if ok == true {
 			w, _ := raw.(waiter)
 			waitingForConfirmation.Delete(w.SenderID)
-			err := startTx(w)
+			hash, err := startTx(w)
 			if err == nil {
-				api.PostDMToUserId("Transaction success!", w.SenderID)
-				tweetTransactionSuccess(w)
+				api.PostDMToUserId("Transaction sent. View your pending transactions at https://explorer.nebulas.io/", w.SenderID)
+				tweetTransactionSuccess(w, hash)
 			} else {
 				api.PostDMToUserId(fmt.Sprintf("Transaction failed.\nReason: %v", err), w.SenderID)
 			}
@@ -218,7 +218,7 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 			return
 		}
 
-		waitingForAddress.Store(id, true)
+		waitingForAddress.Store(senderID, true)
 		acc, err = newAccount(nil)
 		if err != nil {
 			return
@@ -226,8 +226,9 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 
 		err = setAddress(acc, senderID)
 		if err == nil {
-			waitingForAddress.Delete(id)
 		}
+
+		go time.AfterFunc(time.Second*30, func() { waitingForAddress.Delete(senderID) })
 	} else {
 		acc, err = newAccount(address)
 		if err != nil {
@@ -248,18 +249,18 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 	return
 }
 
-func startTx(w waiter) error {
+func startTx(w waiter) (string, error) {
 	api.PostDMToUserId("Starting transaction...", w.SenderID)
 
 	var nonce uint64
 	senderAcc, err := getAcc(w.SenderID, w.SenderID, &nonce)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	recipientAcc, err := getAcc(w.RecipientID, w.SenderID, &nonce)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	amt := uint64(w.Amount * 1000000000000000000)
@@ -275,36 +276,37 @@ func startTx(w waiter) error {
 		nil,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = signTransaction(senderAcc, tx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	encoded, err := encodeRawTx(tx)
 	err = tx.VerifyIntegrity(chainID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := postRawTx(encoded)
 	if err != nil {
-		return err
+		return "", err
+	}
+
+	body := readBody(resp)
+	var parsed map[string]interface{}
+	err = json.Unmarshal(body, &parsed)
+	if err != nil {
+		return "", err
 	}
 
 	if resp.StatusCode != 200 {
-		body := readBody(resp)
-		var parsed map[string]string
-		err := json.Unmarshal(body, &parsed)
-		if err != nil {
-			return err
-		}
-		return errors.New(parsed["error"])
+		return "", errors.New(parsed["error"].(string))
 	}
 
-	return nil
+	return parsed["result"].(map[string]interface{})["txhash"].(string), nil
 }
 
 func cancelTx(senderID int64) {
@@ -335,9 +337,25 @@ func parseStatus(status anaconda.Tweet) (amount float64, err error) {
 	return 0, errors.New("does not match")
 }
 
+func reaction() string {
+	w := []string{
+		"How wonderful!",
+		"Awesome,",
+		"Now that's generous,",
+		"Rock on!",
+		"Marvelous,",
+		"The one and only",
+		"Really? Really.",
+		"Wow,",
+	}
+
+	return fmt.Sprintf("%s", w[rand.Intn(len(w))])
+}
+
 // Send a tweet in reply to the instigating tweet to confirm the transaction succeeded.
-func tweetTransactionSuccess(w waiter) {
+func tweetTransactionSuccess(w waiter, hash string) {
 	v := url.Values{}
+
 	v.Add("in_reply_to_status_id", string(w.StatusID))
-	api.PostTweet(fmt.Sprintf("@%v sent %f NAS to @%v.", w.SenderScreenName, w.Amount, w.RecipientScreenName), v)
+	api.PostTweet(fmt.Sprintf("%v @%v sent %f NAS to @%v. TX: %v", reaction(), w.SenderScreenName, w.Amount, w.RecipientScreenName, hash), v)
 }

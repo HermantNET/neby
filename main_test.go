@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -103,8 +102,6 @@ func TestReadResponse(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Println(r.Result.Result)
-
 	if r.Result.Result == "" {
 		t.Error("Result is empty.")
 	}
@@ -116,5 +113,24 @@ func TestReadResponse(t *testing.T) {
 	_, err = decrypt(r.Result.Result)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestParseTxResult(t *testing.T) {
+	body := []byte(`{"result":{"txhash":"f37acdf93004f7a3d72f1b7f6e56e70a066182d85c186777a2ad3746b01c3b52"}}`)
+	var parsed map[string]interface{}
+	err := json.Unmarshal(body, &parsed)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if parsed["result"].(map[string]interface{})["txhash"].(string) != "f37acdf93004f7a3d72f1b7f6e56e70a066182d85c186777a2ad3746b01c3b52" {
+		t.Error("Error parsing result.")
+	}
+}
+
+func TestReaction(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		reaction()
 	}
 }
