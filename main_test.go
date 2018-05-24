@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -98,6 +99,21 @@ func TestReadResponse(t *testing.T) {
 	body := []byte(`{"result":{"result":"\"432608e866e9833c118f9abc3b5c6a82a646f870f0fd1b49d332f81b58fbae5f\"","execute_err":"","estimate_gas":"20156"}}`)
 	r := response{}
 	err := json.Unmarshal(body, &r)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(r.Result.Result)
+
+	if r.Result.Result == "" {
+		t.Error("Result is empty.")
+	}
+
+	if r.Result.ExecuteErr != "" {
+		t.Errorf("Execution error: %v", r.Result.ExecuteErr)
+	}
+
+	_, err = decrypt(r.Result.Result)
 	if err != nil {
 		t.Error(err)
 	}

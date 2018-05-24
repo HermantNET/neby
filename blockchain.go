@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"./nebulas"
 )
@@ -22,11 +23,15 @@ var errorUnexpectedLength = errors.New("unexpected length")
 var errorDecodeJSON = errors.New("error decoding JSON response")
 
 type response struct {
-	Result string `json:"result"`
+	Result result `json:"result"`
 }
 
-func (r *response) UnmarshalJSON(b []byte) error {
-	r.Result = string(b)
+func (r *response) UnmarshallJSON(b []byte) error {
+	err := json.Unmarshal(b, &r.Result)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -34,13 +39,6 @@ type result struct {
 	Result       string `json:"result"`
 	ExecuteErr   string `json:"execute_err"`
 	EstimatedGas string `json:"estimate_gas"`
-}
-
-func (r *result) UnmarshalJSON(b []byte) error {
-	r.Result = string(b)
-	r.ExecuteErr = string(b)
-	r.EstimatedGas = string(b)
-	return nil
 }
 
 var client = &http.Client{
@@ -93,26 +91,18 @@ func getAddress(id int64) ([]byte, error) {
 	r := response{}
 	err = json.Unmarshal(body, &r)
 	if err != nil {
-		fmt.Println(string(body))
 		return nil, errorDecodeJSON
 	}
 
-	var res result
-	err = json.Unmarshal([]byte(r.Result), &res)
-	if err != nil {
-		fmt.Println(r.Result)
-		return nil, errorDecodeJSON
-	}
-
-	if res.Result == "" {
+	if r.Result.Result == "" {
 		return nil, errorNotInStorage
 	}
 
-	if res.ExecuteErr != "" {
-		return nil, errors.New(res.ExecuteErr)
+	if r.Result.ExecuteErr != "" {
+		return nil, errors.New(r.Result.ExecuteErr)
 	}
 
-	key, err := decrypt(res.Result)
+	key, err := decrypt(r.Result.Result)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +131,10 @@ func encrypt(acc account) (string, error) {
 }
 
 func decrypt(d string) ([]byte, error) {
+	if len(d) == 66 {
+		d = strings.Trim(d, `"`)
+	}
+
 	if len(d) != 64 {
 		return nil, errorUnexpectedLength
 	}
