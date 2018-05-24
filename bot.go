@@ -46,7 +46,7 @@ func stream() {
 		case anaconda.Tweet:
 			if status.User.Id != botID {
 				amount, err := parseStatus(status)
-				if err != nil && amount != 0 && status.InReplyToStatusID != 0 {
+				if err == nil && amount != 0 && status.InReplyToStatusID != 0 {
 					go confirmUserTx(status, amount)
 				}
 			}
@@ -137,7 +137,7 @@ func parseChatCmds(msg anaconda.DirectMessage) error {
 			return errors.New(parsed["error"])
 		}
 
-		api.PostDMToUserId("Transaction was successful.", msg.SenderId)
+		api.PostDMToUserId("Transaction sent.", msg.SenderId)
 		return nil
 	}
 
