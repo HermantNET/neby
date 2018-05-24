@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -88,6 +89,15 @@ func TestSignTx(t *testing.T) {
 
 func TestEncodeRawTx(t *testing.T) {
 	_, err := encodeRawTx(tx)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestReadResponse(t *testing.T) {
+	body := []byte(`{"result":{"result":"\"432608e866e9833c118f9abc3b5c6a82a646f870f0fd1b49d332f81b58fbae5f\"","execute_err":"","estimate_gas":"20156"}}`)
+	r := response{}
+	err := json.Unmarshal(body, &r)
 	if err != nil {
 		t.Error(err)
 	}

@@ -21,6 +21,28 @@ var errorNotInStorage = errors.New("account not in storage")
 var errorUnexpectedLength = errors.New("unexpected length")
 var errorDecodeJSON = errors.New("error decoding JSON response")
 
+type response struct {
+	Result string `json:"result"`
+}
+
+func (r *response) UnmarshalJSON(b []byte) error {
+	r.Result = string(b)
+	return nil
+}
+
+type result struct {
+	Result       string `json:"result"`
+	ExecuteErr   string `json:"execute_err"`
+	EstimatedGas string `json:"estimate_gas"`
+}
+
+func (r *result) UnmarshalJSON(b []byte) error {
+	r.Result = string(b)
+	r.ExecuteErr = string(b)
+	r.EstimatedGas = string(b)
+	return nil
+}
+
 var client = &http.Client{
 	CheckRedirect: func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse
@@ -67,22 +89,12 @@ func getAddress(id int64) ([]byte, error) {
 		return nil, err
 	}
 
-	type response struct {
-		Result string `json:"result"`
-	}
-
 	body := readBody(resp)
-	var r response
+	r := response{}
 	err = json.Unmarshal(body, &r)
 	if err != nil {
 		fmt.Println(string(body))
 		return nil, errorDecodeJSON
-	}
-
-	type result struct {
-		Result       string `json:"result"`
-		ExecuteErr   string `json:"execute_err"`
-		EstimatedGas string `json:"estimate_gas"`
 	}
 
 	var res result
