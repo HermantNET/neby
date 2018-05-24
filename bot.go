@@ -219,6 +219,7 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 		}
 
 		waitingForAddress.Store(senderID, true)
+		go time.AfterFunc(time.Second*90, func() { waitingForAddress.Delete(senderID) })
 		acc, err = newAccount(nil)
 		if err != nil {
 			return
@@ -228,7 +229,6 @@ func getAcc(id int64, senderID int64, nonce *uint64) (acc account, err error) {
 		if err == nil {
 		}
 
-		go time.AfterFunc(time.Second*30, func() { waitingForAddress.Delete(senderID) })
 	} else {
 		acc, err = newAccount(address)
 		if err != nil {
